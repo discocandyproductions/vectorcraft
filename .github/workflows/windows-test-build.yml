@@ -1,0 +1,76 @@
+# Disposable Windows x64 test build — NOT part of the official release pipeline (see release.yml).
+# Manual dispatch only, any branch: builds just one target so a contributor can grab an unsigned,
+# installable Windows build to try out a change, without waiting for (or paying the Actions minutes
+# for) macOS/Linux/FreeBSD/wasm/Flatpak/arm64/x86 builds too.
+#
+# Deliberately has NO Swatinem/rust-cache step: every run compiles from a clean checkout, so a
+# stale cached target/ directory can never ship a binary that doesn't match its own source — which
+# is exactly what happened on the release.yml "windows" job's cache once (see path-length-panel
+# branch history). Slower per run, but correct, and this workflow is for occasional manual testing,
+# not every push, so the extra minutes don't add up the way they would on release.yml.
+name: Windows x64 test build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version override for this test build, e.g. 0.2.0-rc.1 (empty: Cargo.toml)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+  VECTORCRAFT_BUILD_SHA: ${{ github.sha }}
+  INPUT_VERSION: ${{ inputs.version }}
+
+jobs:
+  windows-x64:
+    name: Windows x64 (test build, no cache)
+    runs-on: windows-latest
+    # No `environment: release`: this never has signing secrets, so the binaries are always
+    # unsigned — fine for local testing, never for distribution.
+    steps:
+      - uses: actions/checkout@v7
+      # Japanese, Chinese, Arabic and Thai fonts, embedded by crates/text/build.rs (CRAFT_FONTS_DIR
+      # on the build step).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-fonts
+          ref: 3d9ab3a132ed0eff457e424226a435a901da30d3
+          path: craft-fonts
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - name: Resolve version
+        shell: bash
+        run: |
+          . packaging/env.sh
+          v="${INPUT_VERSION#v}"
+          v="${v:-$VERSION}"
+          echo "VECTORCRAFT_VERSION=$v" >>"$GITHUB_ENV"
+          echo "VECTORCRAFT_BUILD_DATE=$(date -u +%Y-%m-%d)" >>"$GITHUB_ENV"
+      - name: Apply version override
+        if: inputs.version != ''
+        shell: bash
+        run: cargo xtask version set "$VECTORCRAFT_VERSION"
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add -g WixToolset.UI.wixext/5.0.2 WixToolset.Util.wixext/5.0.2
+      - name: Build, package (unsigned)
+        shell: pwsh
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+          CRAFT_FONTS_REQUIRED: "1"
+        run: ./packaging/windows/package.ps1 -Arch x64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vectorcraft-windows-x64-test
+          path: dist/release/*
+          if-no-files-found: error
