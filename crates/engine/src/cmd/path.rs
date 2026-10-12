@@ -113,6 +113,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_anchors,
             cut_at_anchors
         ),
+        cmd!(
+            "path.setSegmentLength",
+            "Set Segment Length",
+            [],
+            None,
+            "{length} direct-select a contiguous run of anchor points within one subpath (not the whole subpath); the run's first and last anchors stay put and the curve between them is scaled, by its deviation from the straight chord between those two points, to reach `length`",
+            has_segment_run,
+            set_segment_length
+        ),
     ]
 }
 
@@ -375,6 +384,102 @@ fn join(s: &mut Session, p: &Value) -> Result<Value> {
         }
         [] => return Err(EngineError::Other("select paths to join".into())),
     }
+    ok()
+}
+
+/// A direct-selected contiguous run of anchors within a single subpath of a single selected
+/// path: the object id, its subpath index, and the run's anchor indices in path order (wrapping
+/// through 0 on a closed subpath when the run crosses that point). `None` unless the current
+/// selection is exactly that shape — one object, one subpath, a proper (not the whole subpath)
+/// contiguous pick of at least two anchors — which is what [`set_segment_length`] needs: two
+/// fixed end anchors and a run of curve between them to scale.
+pub(super) fn segment_run(s: &Session) -> Option<(NodeId, usize, Vec<usize>)> {
+    let st = s.active()?;
+    let [id] = st.selection.objects.as_slice() else { return None };
+    let set = st.selection.anchors.get(id)?;
+    if set.is_empty() {
+        return None;
+    }
+    let mut sis: BTreeSet<usize> = set.iter().map(|&(si, _)| si).collect();
+    let si = sis.pop_first().filter(|_| sis.is_empty())?; // exactly one subpath involved
+    let sp = st.doc.node(*id)?.path_data()?.subpaths.get(si)?;
+    let n = sp.anchors.len();
+    let ais: BTreeSet<usize> = set.iter().map(|&(_, ai)| ai).collect();
+    if ais.len() < 2 || ais.len() >= n {
+        return None; // need at least two anchors, and a proper subset (not the whole subpath)
+    }
+    contiguous_run(&ais, n, sp.closed).map(|run| (*id, si, run))
+}
+
+/// `selected`'s indices as one ordered, contiguous run — wrapping past `n - 1` to `0` when
+/// `closed` and the run crosses that point — or `None` when they don't form a single run.
+fn contiguous_run(selected: &BTreeSet<usize>, n: usize, closed: bool) -> Option<Vec<usize>> {
+    let (&first, &last) = (selected.first()?, selected.last()?);
+    if last - first + 1 == selected.len() {
+        return Some(selected.iter().copied().collect());
+    }
+    if !closed {
+        return None;
+    }
+    // Wraps through 0: that's exactly the case where the *unselected* indices are themselves one
+    // contiguous block, and the run picks up right after it.
+    let unselected: BTreeSet<usize> = (0..n).filter(|i| !selected.contains(i)).collect();
+    let (&ufirst, &ulast) = (unselected.first()?, unselected.last()?);
+    if ulast - ufirst + 1 != unselected.len() {
+        return None;
+    }
+    Some((ulast + 1..n).chain(0..ufirst).collect())
+}
+
+pub fn has_segment_run(s: &Session) -> std::result::Result<(), String> {
+    segment_run(s).map(|_| ()).ok_or_else(|| "select a contiguous run of anchor points within one path, not the whole path".into())
+}
+
+/// The subpath at `(id, si)`, cloned (so it can be reshaped speculatively while searching for a
+/// scale factor, before the real edit).
+fn subpath_at(s: &Session, id: NodeId, si: usize) -> Result<SubPath> {
+    s.doc()?.doc.node(id).and_then(|n| n.path_data()).and_then(|pd| pd.subpaths.get(si)).cloned().ok_or(EngineError::NoNode(id))
+}
+
+fn set_segment_length(s: &mut Session, p: &Value) -> Result<Value> {
+    const C: &str = "path.setSegmentLength";
+    let target = f64_req(p, "length", C)?;
+    if target <= 0.0 {
+        return Err(bad(C, "length must be greater than zero"));
+    }
+    let (id, si, run) =
+        segment_run(s).ok_or_else(|| bad(C, "select a contiguous run of anchor points within one path, not the whole path"))?;
+    let sp = subpath_at(s, id, si)?;
+    let n = sp.anchors.len();
+    let base = run[0];
+    let segs = run.len() - 1;
+    let chord_len = sp.anchors[run[0] % n].p.distance(sp.anchors[run[run.len() - 1] % n].p);
+    if target < chord_len - 1e-6 {
+        return Err(bad(C, "length can't be less than the straight-line distance between the fixed anchor points"));
+    }
+    // How long the run is for a given chord-deviation scale factor `k` (k = 1 is the original).
+    let f = |k: f64| sp.scale_chord_deviation(&run, k).partial_length(base..base + segs);
+    if (f(1.0) - chord_len).abs() < 1e-9 {
+        return Err(bad(C, "the selected run has no deviation from the chord to scale"));
+    }
+    // Binary search for k >= 0: length grows (roughly) monotonically with the deviation's scale,
+    // unlike the whole-object case (`object.setLength`), which scales linearly and so needs no
+    // search at all.
+    let (mut lo, mut hi) = (0.0_f64, 1.0_f64);
+    while f(hi) < target && hi < 1.0e6 {
+        hi *= 2.0;
+    }
+    for _ in 0..60 {
+        let mid = (lo + hi) * 0.5;
+        if f(mid) < target { lo = mid } else { hi = mid }
+    }
+    let k = (lo + hi) * 0.5;
+    s.edit("Set Segment Length", |d, _| {
+        let path = path_mut(d, id)?;
+        let dest = path.subpaths.get_mut(si).ok_or(EngineError::NoNode(id))?;
+        *dest = sp.scale_chord_deviation(&run, k);
+        Ok(())
+    })?;
     ok()
 }
 

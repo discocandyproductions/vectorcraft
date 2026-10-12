@@ -365,6 +365,50 @@ impl SubPath {
         self.to_bezpath_into(&mut bp);
         bp.area()
     }
+    /// Length of segments `i` for `i` in `range`, via [`Self::segment`] (which wraps a closed
+    /// subpath's index with `% n`, so `range` may run past [`Self::segment_count`]). Used to sum
+    /// just part of a path's length, e.g. a direct-selected run of anchors.
+    pub fn partial_length(&self, range: std::ops::Range<usize>) -> f64 {
+        range.map(|i| kurbo::ParamCurveArclen::arclen(&self.segment(i), 1e-6)).sum()
+    }
+    /// Scale this subpath's deviation from the straight chord between the anchors at `run`'s
+    /// first and last indices by `k`, leaving those two anchors' own positions fixed. `run` must
+    /// hold at least two anchor indices, in path order — consecutive mod `self.anchors.len()`, as
+    /// built by a caller resolving a direct-selected contiguous run (wrapping through 0 on a
+    /// closed subpath is fine; every index here is taken mod the anchor count). Anchors strictly
+    /// between the two ends move fully (position and both handles); the two ends keep their
+    /// position and only the handle reaching into the run moves. A no-op (returns a clone) when
+    /// the two ends coincide, since there's then no chord direction to scale along.
+    pub fn scale_chord_deviation(&self, run: &[usize], k: f64) -> SubPath {
+        let mut sp = self.clone();
+        let n = self.anchors.len();
+        let (Some(&first), Some(&last)) = (run.first(), run.last()) else { return sp };
+        let origin = self.anchors[first % n].p;
+        let chord = self.anchors[last % n].p - origin;
+        let chord_len = chord.hypot();
+        if chord_len < EPS {
+            return sp;
+        }
+        let u = chord / chord_len; // unit vector along the chord
+        let perp = kurbo::Vec2::new(-u.y, u.x); // unit vector perpendicular to it
+        let scaled = |q: Point| -> Point {
+            let rel = q - origin;
+            origin + u * rel.dot(u) + perp * (rel.dot(perp) * k)
+        };
+        for (j, &idx) in run.iter().enumerate() {
+            let a = &mut sp.anchors[idx % n];
+            if j == 0 {
+                a.h_out = scaled(a.h_out);
+            } else if j + 1 == run.len() {
+                a.h_in = scaled(a.h_in);
+            } else {
+                a.p = scaled(a.p);
+                a.h_in = scaled(a.h_in);
+                a.h_out = scaled(a.h_out);
+            }
+        }
+        sp
+    }
 }
 
 /// A (possibly multi-subpath) path.
