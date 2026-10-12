@@ -945,3 +945,16 @@ fn cut_at_anchors(s: &mut Session, _: &Value) -> Result<Value> {
     })?;
     Ok(super::draw2::ids_json(&ids))
 }
+
+impl Session {
+    /// The Path Length panel's "sub-path" reading: with a direct-selected contiguous run of
+    /// anchors within one subpath ([`segment_run`]), the run's own partial length — what
+    /// `path.setSegmentLength` would change. `None` when the selection isn't that shape, which is
+    /// the panel's cue to fall back to [`Session::selection_length`] (the whole-selection mode)
+    /// instead.
+    pub fn segment_run_length(&self) -> Option<f64> {
+        let (id, si, run) = segment_run(self)?;
+        let sp = self.doc().ok()?.doc.node(id)?.path_data()?.subpaths.get(si)?;
+        Some(sp.partial_length(run[0]..run[0] + run.len() - 1))
+    }
+}
