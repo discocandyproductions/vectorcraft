@@ -2271,6 +2271,9 @@ font-technology	Variable	Променливи
 	Pathfinder Options…	Опции за търсач на пътища…
 	Pathfinders:	Търсачи на пътища:
 	Paths	Пътища
+	Path Length	Дължина на пътя
+	Length:	Дължина:
+	Selection has no length to scale	Селекцията няма дължина за мащабиране
 	Paths: {paths}    Anchors: {anchors}    Colors: {colors}	Пътища: {paths}    Опорни точки: {anchors}    Цветове: {colors}
 	Pattern	Мостра
 	Pattern Editing	Редактиране на мостра
