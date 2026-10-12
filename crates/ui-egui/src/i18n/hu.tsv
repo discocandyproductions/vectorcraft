@@ -2769,6 +2769,8 @@ file-filter	Templates	Sablonok
 	Path Eraser	Útvonalradír
 	Path Eraser Tool	Útvonalradír
 	Path:	Útvonal:
+	Path Length	Útvonalhossz
+	Selection has no length to scale	A kijelölésnek nincs hossza a méretezéshez
 	Pathfinder	Útvonalkezelő
 	Pathfinder Options…	Útvonalkezelő beállításai…
 	Pathfinders:	Útvonalkezelők:

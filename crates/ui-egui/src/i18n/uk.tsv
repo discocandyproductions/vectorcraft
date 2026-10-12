@@ -1164,6 +1164,9 @@ font-technology	Variable	Варіативні
 	Number:	Кількість:
 	Longest:	Найдовший:
 	Path:	Контур:
+	Length:	Довжина:
+	Path Length	Довжина контуру
+	Selection has no length to scale	Виділення не має довжини для масштабування
 	Largest:	Найбільше:
 	Direction:	Напрямок:
 	Symbolism Tools Options	Параметри інструментів символів
