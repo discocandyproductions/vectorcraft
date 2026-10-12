@@ -177,6 +177,51 @@ fn set_length_scales_selection_uniformly() {
     assert_eq!(s.selection_length(&[a]), Some(80.0));
 }
 
+/// `path.setSegmentLength`: with a contiguous run of anchors direct-selected within one subpath
+/// (not the whole subpath), the run's two end anchors stay put and the curve between them is
+/// scaled, by its deviation from the straight chord, to reach the requested length.
+#[test]
+fn set_segment_length_keeps_the_ends_and_scales_the_bulge() {
+    let mut s = session();
+    // An open 4-anchor polyline: (0,100) -> (100,0) -> (200,100) -> (300,100). The run is the
+    // first three anchors; the last stays outside it as an unselected tail.
+    let anchors = &json!({
+        "anchors": [
+            {"x": 0, "y": 100},
+            {"x": 100, "y": 0},
+            {"x": 200, "y": 100},
+            {"x": 300, "y": 100},
+        ],
+    });
+    let id = NodeId(s.execute("path.create", anchors).unwrap()["id"].as_u64().unwrap());
+    s.execute("select.anchors", &json!({"id": id.0, "anchors": [[0, 0], [0, 1], [0, 2]], "mode": "set"})).unwrap();
+    let path = |s: &Session| s.doc().unwrap().doc.node(id).unwrap().path_data().unwrap().clone();
+    let chord = Point::new(0.0, 100.0).distance(Point::new(200.0, 100.0)); // 200
+    let before = path(&s).subpaths[0].partial_length(0..2);
+    assert!((before - 2.0 * 100.0 * 2.0_f64.sqrt()).abs() < 1e-6, "before: {before}"); // two legs of a right triangle
+    s.execute("path.setSegmentLength", &json!({"length": 250})).unwrap();
+    let p = path(&s);
+    let sp = &p.subpaths[0];
+    assert_eq!(sp.anchors[0].p, Point::new(0.0, 100.0), "run start stays put");
+    assert_eq!(sp.anchors[2].p, Point::new(200.0, 100.0), "run end stays put");
+    assert_eq!(sp.anchors[3].p, Point::new(300.0, 100.0), "the unselected tail is untouched");
+    assert!((sp.partial_length(0..2) - 250.0).abs() < 1e-3, "{:?}", sp.partial_length(0..2));
+    // Below the chord length, exactly the chord length (no deviation left to flatten further),
+    // and non-positive lengths are all rejected; nothing changes.
+    assert!(s.execute("path.setSegmentLength", &json!({"length": chord - 1.0})).is_err());
+    assert!(s.execute("path.setSegmentLength", &json!({"length": 0})).is_err());
+    assert!(s.execute("path.setSegmentLength", &json!({"length": -5})).is_err());
+    assert_eq!(path(&s).subpaths[0].anchors[1].p, sp.anchors[1].p);
+    // A dead-straight run has no deviation from its own chord to scale.
+    let straight = &json!({"anchors": [{"x": 0, "y": 0}, {"x": 50, "y": 0}, {"x": 100, "y": 0}]});
+    let id2 = NodeId(s.execute("path.create", straight).unwrap()["id"].as_u64().unwrap());
+    s.execute("select.anchors", &json!({"id": id2.0, "anchors": [[0, 0], [0, 1], [0, 2]], "mode": "set"})).unwrap();
+    assert!(s.execute("path.setSegmentLength", &json!({"length": 150})).is_err());
+    // The whole subpath selected (no proper subset) isn't a "run": the command stays disabled.
+    s.execute("select.set", &json!({"ids": [id2.0]})).unwrap();
+    assert!(s.execute("path.setSegmentLength", &json!({"length": 150})).is_err());
+}
+
 #[test]
 fn copy_paste_front_back() {
     let mut s = session();
