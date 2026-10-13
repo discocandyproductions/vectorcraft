@@ -324,10 +324,31 @@ fn select_all_on_focus(ui: &Ui, resp: &Response, text: &str) {
 /// The recessed text box of the panel fields showing `shown`, `rows` lines tall (1: single line),
 /// its text kept under `id` while it has focus. Returns the text (as edited), the text edit's
 /// response and the box.
+///
+/// Focus alone doesn't freeze the field on an old value: a field that's focused but untouched (its
+/// kept text still matches what was last shown, i.e. the user hasn't typed into it yet) keeps
+/// following `shown` as it changes under it — the Path Length panel's live reading during a
+/// sub-path drag, for one, which used to go stale the moment the field had keyboard focus at all
+/// (even just from an earlier click, no typing) until something else took focus back. Once the
+/// text has actually diverged from a shown value (the user typed, stepped or scrubbed it), that
+/// divergence is what keeps it from being overwritten — not focus by itself.
 fn recessed_text(ui: &mut Ui, id: egui::Id, shown: &str, width: f32, rows: usize) -> (String, Response, Rect) {
     let t = Tokens::get(ui.ctx());
     let editing = ui.memory(|m| m.has_focus(id));
-    let mut buf: String = if editing { ui.data_mut(|d| d.get_temp::<String>(id)).unwrap_or_else(|| shown.to_string()) } else { shown.to_string() };
+    let last_shown_id = id.with("last_shown");
+    let mut buf: String = if editing {
+        let kept = ui.data_mut(|d| d.get_temp::<String>(id));
+        let last_shown = ui.data_mut(|d| d.get_temp::<String>(last_shown_id));
+        match (&kept, &last_shown) {
+            // Still exactly what we last showed: no edit to protect, so follow the live value.
+            (Some(k), Some(ls)) if k == ls => shown.to_string(),
+            (Some(k), _) => k.clone(),
+            _ => shown.to_string(),
+        }
+    } else {
+        shown.to_string()
+    };
+    ui.data_mut(|d| d.insert_temp(last_shown_id, shown.to_string()));
     // The box is exactly as tall as the other controls of a row (26 points a line), its text
     // centred in it: a frame around the text came out a point taller and stood out next to
     // spinners and dropdowns (#900).

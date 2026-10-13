@@ -55,6 +55,12 @@ impl Field {
         let r = st.cursor.char_range()?.as_sorted_char_range();
         Some((r.start.0, r.end.0))
     }
+
+    /// The text the field is currently showing (what `recessed_text` kept under its id, which is
+    /// what the next frame's text box is built from).
+    fn shown_text(&self) -> Option<String> {
+        self.ctx.data(|d| d.get_temp::<String>(self.id.get()))
+    }
 }
 
 fn enter() -> Event {
@@ -101,6 +107,49 @@ fn focus_selects_the_whole_field_so_typing_replaces_it() {
     assert_eq!(f.selection(), Some((0, "100 px".len())), "the unit is selected too");
     f.num(vec![Event::Text("1080/2".into())]);
     assert_eq!(f.num(vec![enter()]), Some(540.0));
+}
+
+/// A focused-but-untouched field (no typing since it gained focus) keeps following a value that
+/// keeps changing under it — the Path Length panel's live reading during a sub-path drag, which
+/// used to freeze on whatever was shown the moment the field happened to have keyboard focus, with
+/// no typing involved at all (bug: the field stayed on an old number while the selection's actual
+/// length kept changing on the canvas underneath it).
+#[test]
+fn an_untouched_focused_field_keeps_following_a_changing_value() {
+    let mut f = Field::new();
+    let v = Cell::new(100.0);
+    let draw = |ui: &mut egui::Ui| widgets::num_field(ui, "f", Some(v.get()), Unit::Pixels, 80.0);
+    f.frame(vec![], &draw);
+    f.frame(f.click(1), &draw);
+    f.frame(vec![], &draw);
+    assert_eq!(f.shown_text().as_deref(), Some("100 px"), "focused, untouched: shows the live value");
+    // The value changes underneath (a canvas drag, say) while the field still has focus and the
+    // person hasn't typed a thing: it should keep tracking, not freeze on "100 px".
+    v.set(132.7704);
+    f.frame(vec![], &draw);
+    assert_eq!(f.shown_text(), Some(Unit::Pixels.format(v.get())), "still focused: follows the new value");
+    v.set(175.611);
+    f.frame(vec![], &draw);
+    assert_eq!(f.shown_text(), Some(Unit::Pixels.format(v.get())), "keeps following across frames");
+}
+
+/// Once the person actually types into a focused field, that edit is protected again: a value
+/// change underneath no longer overwrites it until they commit or move on.
+#[test]
+fn typing_into_a_focused_field_still_protects_the_edit_from_a_changing_value() {
+    let mut f = Field::new();
+    let v = Cell::new(100.0);
+    let draw = |ui: &mut egui::Ui| widgets::num_field(ui, "f", Some(v.get()), Unit::Pixels, 80.0);
+    f.frame(vec![], &draw);
+    f.frame(f.click(1), &draw);
+    f.frame(vec![], &draw);
+    f.frame(vec![Event::Text("42".into())], &draw);
+    assert_eq!(f.shown_text().as_deref(), Some("42"), "the typed text shows");
+    // The underlying value changes mid-type: the half-typed edit must survive untouched.
+    v.set(999.0);
+    f.frame(vec![], &draw);
+    assert_eq!(f.shown_text().as_deref(), Some("42"), "typing is still protected");
+    assert_eq!(f.num(vec![enter()]), Some(42.0), "and still commits what was typed");
 }
 
 #[test]
