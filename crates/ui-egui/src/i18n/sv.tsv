@@ -2943,6 +2943,7 @@ digits	Malayalam	Malayalam
 	Set Bounds	Ange gränser
 	Set Current Layer	Ange aktuellt lager
 	Set Keyboard Shortcut	Ange kortkommando
+	Set Length	Ange längd
 	Set Mesh Point Color	Ange färg för nätpunkt
 	Set Preference	Ange inställning
 	Set Slice Rectangle	Ange skivrektangel
@@ -5528,6 +5529,7 @@ theme	Appearance	Utseende
 	Override Action "Open" Commands	Ändra åtgärdens "Öppna"-kommandon lokalt
 	Override Action "Save" Commands	Ändra åtgärdens "Spara"-kommandon lokalt
 	Path Length	Banlängd
+	Selection has no length to scale	Markeringen har ingen längd att skala
 	Play:	Spela upp:
 	Save and Close	Spara och stäng
 	Stop on Errors	Stoppa vid fel

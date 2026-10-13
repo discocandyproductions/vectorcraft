@@ -3187,6 +3187,7 @@ theme	Appearance	Izgled
 	Objects	Objekti
 	Paths	Putanje
 	Path Length	Dužina putanje
+	Selection has no length to scale	Odabir nema dužinu za skaliranje
 	Add Guide	Dodaj vodilicu
 	Edit Selection	Uredi odabir
 	Recall Selection	Vrati odabir
@@ -3293,6 +3294,7 @@ theme	Appearance	Izgled
 	Reorder	Promijeni redoslijed
 	Select Art	Odaberi crtež
 	Set Current Layer	Postavi trenutni sloj
+	Set Length	Postavi dužinu
 	Flatten Artwork	Spljošti crtež
 	Locate Object	Pronađi objekat
 	Lock Others	Zaključaj ostale

@@ -1775,7 +1775,6 @@ font-technology	Variable	Μεταβλητές
 	Pathfinder	Pathfinder
 	Paths	Διαδρομές
 	Path Length	Μήκος διαδρομής
-	Length:	Μήκος:
 	Selection has no length to scale	Η επιλογή δεν έχει μήκος για κλιμάκωση
 	Pattern	Μοτίβο
 	Pen Tool	Πένα (Pen Tool)
@@ -3457,6 +3456,7 @@ digits	Malayalam	Μαλαγιάλαμ
 	Set Bounds	Ορισμός ορίων
 	Set Current Layer	Ορισμός τρέχοντος επιπέδου
 	Set Keyboard Shortcut	Ορισμός συντόμευσης πληκτρολογίου
+	Set Length	Ορισμός μήκους
 	Set Mesh Point Color	Ορισμός χρώματος σημείου πλέγματος
 	Set Preference	Ορισμός προτίμησης
 	Set Slice Rectangle	Ορισμός ορθογωνίου τομής

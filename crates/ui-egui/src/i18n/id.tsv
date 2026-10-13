@@ -3074,6 +3074,7 @@ theme	Appearance	Tampilan
 	Reorder	Susun ulang
 	Select Art	Pilih karya seni
 	Set Current Layer	Tetapkan lapisan saat ini
+	Set Length	Tetapkan panjang
 	Flatten Artwork	Ratakan karya seni
 	Locate Object	Temukan objek
 	Lock Others	Kunci lainnya
@@ -5213,6 +5214,7 @@ mark-style	Japanese	Jepang
 	Edge Only	Hanya tepi
 	Overlay Edge	Hamparkan tepi
 	Path Length	Panjang jalur
+	Selection has no length to scale	Seleksi tidak memiliki panjang untuk diskalakan
 @msg	the file's layers weren't read ({_1}): it comes in as its page, in one layer	lapisan file tidak terbaca ({_1}): file masuk sebagai halamannya, dalam satu lapisan
 @msg	the file's layers weren't read from its editing data ({_1}): they come from its PDF part	lapisan file tidak terbaca dari data pengeditannya ({_1}): lapisannya berasal dari bagian PDF file
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` harus grayscale, rgb, hsb, cmyk atau websafe

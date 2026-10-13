@@ -2272,7 +2272,6 @@ font-technology	Variable	Променливи
 	Pathfinders:	Търсачи на пътища:
 	Paths	Пътища
 	Path Length	Дължина на пътя
-	Length:	Дължина:
 	Selection has no length to scale	Селекцията няма дължина за мащабиране
 	Paths: {paths}    Anchors: {anchors}    Colors: {colors}	Пътища: {paths}    Опорни точки: {anchors}    Цветове: {colors}
 	Pattern	Мостра
@@ -2940,6 +2939,7 @@ digits	Malayalam	Малаялам
 	Set Bounds	Задаване на граници
 	Set Current Layer	Задаване на текущ слой
 	Set Keyboard Shortcut	Задаване на клавишна комбинация
+	Set Length	Задаване на дължина
 	Set Mesh Point Color	Задаване на цвят на точка от мрежата
 	Set Preference	Задаване на настройка
 	Set Slice Rectangle	Задаване на правоъгълник за резен

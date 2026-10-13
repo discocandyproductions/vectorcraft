@@ -3088,6 +3088,7 @@ theme	Appearance	Vormgeving
 	Reorder	Opnieuw ordenen
 	Select Art	Kunst selecteren
 	Set Current Layer	Huidige laag instellen
+	Set Length	Lengte instellen
 	Flatten Artwork	Kunst afvlakken
 	Locate Object	Object lokaliseren
 	Lock Others	Overigen vergrendelen
@@ -5221,6 +5222,7 @@ mark-style	Japanese	Japans
 	Edge Only	Alleen rand
 	Overlay Edge	Rand bedekken
 	Path Length	Padlengte
+	Selection has no length to scale	De selectie heeft geen lengte om te schalen
 @msg	the file's layers weren't read ({_1}): it comes in as its page, in one layer	de lagen van het bestand zijn niet ingelezen ({_1}): het komt binnen als zijn pagina, in één laag
 @msg	the file's layers weren't read from its editing data ({_1}): they come from its PDF part	de lagen van het bestand zijn niet ingelezen uit de bewerkingsgegevens ({_1}): ze komen uit het PDF-gedeelte
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` moet grayscale, rgb, hsb, cmyk of websafe zijn

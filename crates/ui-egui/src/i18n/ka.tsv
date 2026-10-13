@@ -2886,6 +2886,7 @@ theme	Appearance	იერსახე
 	Reorder	გადალაგება
 	Select Art	ნახატის მონიშვნა
 	Set Current Layer	მიმდინარე შრედ დაყენება
+	Set Length	სიგრძის დაყენება
 	Flatten Artwork	ნახატის გაბრტყელება
 	Locate Object	ობიექტის მოძებნა
 	Lock Others	დანარჩენების ჩაკეტვა
@@ -5109,6 +5110,7 @@ imageTrace	Outline	კონტური
 	Hide Template	შაბლონის დამალვა
 	Show Template	შაბლონის ჩვენება
 	Path Length	ტრაექტორიის სიგრძე
+	Selection has no length to scale	მონიშნულს არ აქვს სიგრძე მასშტაბირებისთვის
 	Filter	ფილტრი
 	Clear All	ყველას გასუფთავება
 	By Object	ობიექტის მიხედვით

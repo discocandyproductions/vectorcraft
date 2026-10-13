@@ -2152,6 +2152,7 @@ shape	Open	Açık
 	Pathfinders:	Yol Bulucular:
 	Paths	Yollar
 	Path Length	Yol Uzunluğu
+	Selection has no length to scale	Seçimde ölçeklenecek uzunluk yok
 	Paths: {paths}    Anchors: {anchors}    Colors: {colors}	Yollar: {paths} Bağlantılar: {anchors} Renkler: {colors}
 	Pattern	Desen
 	Pattern Editing	Desen Düzenleme
@@ -2849,6 +2850,7 @@ digits	Malayalam	Malayalam
 	Set Bounds	Sınırları Belirle
 	Set Current Layer	Geçerli Katmanı Ayarla
 	Set Keyboard Shortcut	Klavye Kısayolunu Ayarla
+	Set Length	Uzunluğu Ayarla
 	Set Mesh Point Color	Kafes Noktası Rengini Ayarla
 	Set Preference	Tercihi Ayarla
 	Set Slice Rectangle	Dilim Dikdörtgenini Ayarla

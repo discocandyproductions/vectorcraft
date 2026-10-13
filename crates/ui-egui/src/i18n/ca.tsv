@@ -2887,6 +2887,7 @@ digits	Malayalam	Malaiàlam
 	Path Eraser	Esborrador de traçats
 	Path Eraser Tool	Eina d’esborrador de traçats
 	Path Length	Longitud del traçat
+	Selection has no length to scale	La selecció no té longitud per escalar
 	Path:	Traçat:
 	Pathfinder	Cercador de traçats
 	Pathfinder Options	Opcions del cercador de traçats
@@ -3758,6 +3759,7 @@ digits	Malayalam	Malaiàlam
 	Set base color to the current color	Defineix el color base com a color actual
 	Set Bounds	Defineix els límits
 	Set Current Layer	Defineix la capa actual
+	Set Length	Defineix la longitud
 	Set History Limit…	Defineix el límit de l’historial…
 	Set Keyboard Shortcut	Defineix la drecera de teclat
 	Set Mesh Point Color	Defineix el color del punt de malla
