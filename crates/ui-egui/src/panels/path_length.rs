@@ -2,9 +2,11 @@
 //! - Whole selection (the default): the total path length (every path in it summed — a compound
 //!   path's and a selected group's paths included), editable to uniformly scale the selection,
 //!   about its centre, to a new length (`object.setLength`).
-//! - Sub-path: with a direct-selected contiguous run of anchor points within one subpath (not the
-//!   whole subpath), the length of just that run, editable to scale the curve's deviation from the
-//!   straight chord between the run's two end anchors — which stay put (`path.setSegmentLength`).
+//! - Sub-path: with a direct-selected contiguous run of interior anchor points within one
+//!   subpath, left with one anchor unselected on each side, the length of the whole span from one
+//!   of those flanking anchors to the other, editable to scale the curve's deviation from the
+//!   straight chord between them — the flanking anchors stay put, and only the anchors the person
+//!   selected move (`path.setSegmentLength`).
 //!
 //! Unlike Illustrator's Document Info, which only reports a path's length, this field can be
 //! typed into; both modes are beyond parity (see `docs/ui-parity.md`).
