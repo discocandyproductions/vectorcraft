@@ -1200,7 +1200,6 @@ font-technology	Variable	Variables
 	Number:	Número:
 	Longest:	Más largo:
 	Path:	Trazado:
-	Length:	Longitud:
 	Path Length	Longitud del trazado
 	Selection has no length to scale	La selección no tiene longitud para escalar
 	Largest:	Más grande:
@@ -3009,6 +3008,7 @@ digits	Malayalam	Malayálam
 	Set Bounds	Definir límites
 	Set Current Layer	Definir capa actual
 	Set Keyboard Shortcut	Definir método abreviado de teclado
+	Set Length	Definir longitud
 	Set Mesh Point Color	Definir color de punto de malla
 	Set Preference	Definir preferencia
 	Set Slice Rectangle	Definir rectángulo de sector
