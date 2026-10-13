@@ -582,8 +582,7 @@ fn set_segment_length(s: &mut Session, p: &Value) -> Result<Value> {
     if target <= 0.0 {
         return Err(bad(C, "length must be greater than zero"));
     }
-    let (id, si, run) =
-        segment_run(s).ok_or_else(|| bad(C, "select a contiguous run of anchor points within one path, not the whole path"))?;
+    let (id, si, run) = segment_run(s).ok_or_else(|| bad(C, "select a contiguous run of anchor points within one path, not the whole path"))?;
     let sp = subpath_at(s, id, si)?;
     let n = sp.anchors.len();
     let base = run[0];
