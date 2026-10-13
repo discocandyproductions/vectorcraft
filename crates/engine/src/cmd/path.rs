@@ -522,12 +522,15 @@ fn join(s: &mut Session, p: &Value) -> Result<Value> {
     ok()
 }
 
-/// A direct-selected contiguous run of anchors within a single subpath of a single selected
-/// path: the object id, its subpath index, and the run's anchor indices in path order (wrapping
-/// through 0 on a closed subpath when the run crosses that point). `None` unless the current
-/// selection is exactly that shape — one object, one subpath, a proper (not the whole subpath)
-/// contiguous pick of at least two anchors — which is what [`set_segment_length`] needs: two
-/// fixed end anchors and a run of curve between them to scale.
+/// A direct-selected, contiguous run of anchors the person wants to *move*, within a single
+/// subpath of a single selected path, widened by the one unselected anchor immediately before
+/// and after it in path order: the object id, its subpath index, and that widened run's anchor
+/// indices in path order (wrapping through 0 on a closed subpath when it crosses that point). The
+/// two flanking anchors — deliberately left unselected — land at the front and back of the
+/// returned run, which is what [`set_segment_length`] needs: it keeps exactly those two fixed and
+/// scales everything the person did select, sitting strictly between them. `None` unless the
+/// current selection is exactly that shape: one object, one subpath, a proper, contiguous pick of
+/// at least one anchor that still has a free, unselected anchor on each side of it.
 pub(super) fn segment_run(s: &Session) -> Option<(NodeId, usize, Vec<usize>)> {
     let st = s.active()?;
     let [id] = st.selection.objects.as_slice() else { return None };
@@ -539,11 +542,24 @@ pub(super) fn segment_run(s: &Session) -> Option<(NodeId, usize, Vec<usize>)> {
     let si = sis.pop_first().filter(|_| sis.is_empty())?; // exactly one subpath involved
     let sp = st.doc.node(*id)?.path_data()?.subpaths.get(si)?;
     let n = sp.anchors.len();
-    let ais: BTreeSet<usize> = set.iter().map(|&(_, ai)| ai).collect();
-    if ais.len() < 2 || ais.len() >= n {
-        return None; // need at least two anchors, and a proper subset (not the whole subpath)
+    if n == 0 {
+        return None;
     }
-    contiguous_run(&ais, n, sp.closed).map(|run| (*id, si, run))
+    let ais: BTreeSet<usize> = set.iter().map(|&(_, ai)| ai).collect();
+    let selected = contiguous_run(&ais, n, sp.closed)?;
+    let (&first, &last) = (selected.first()?, selected.last()?);
+    if !sp.closed && (first == 0 || last == n - 1) {
+        return None; // touches an open path's own end: no anchor there to hold fixed
+    }
+    let before = (first + n - 1) % n;
+    let after = (last + 1) % n;
+    if before == after || ais.contains(&before) || ais.contains(&after) {
+        return None; // not enough unselected anchors left to fix both ends
+    }
+    let mut run = vec![before];
+    run.extend(selected);
+    run.push(after);
+    Some((*id, si, run))
 }
 
 /// `selected`'s indices as one ordered, contiguous run — wrapping past `n - 1` to `0` when
@@ -567,7 +583,9 @@ fn contiguous_run(selected: &BTreeSet<usize>, n: usize, closed: bool) -> Option<
 }
 
 pub fn has_segment_run(s: &Session) -> std::result::Result<(), String> {
-    segment_run(s).map(|_| ()).ok_or_else(|| "select a contiguous run of anchor points within one path, not the whole path".into())
+    segment_run(s)
+        .map(|_| ())
+        .ok_or_else(|| "select one or more anchor points within a path, leaving an anchor unselected on each side to hold still".into())
 }
 
 /// The subpath at `(id, si)`, cloned (so it can be reshaped speculatively while searching for a
@@ -582,7 +600,8 @@ fn set_segment_length(s: &mut Session, p: &Value) -> Result<Value> {
     if target <= 0.0 {
         return Err(bad(C, "length must be greater than zero"));
     }
-    let (id, si, run) = segment_run(s).ok_or_else(|| bad(C, "select a contiguous run of anchor points within one path, not the whole path"))?;
+    let (id, si, run) = segment_run(s)
+        .ok_or_else(|| bad(C, "select one or more anchor points within a path, leaving an anchor unselected on each side to hold still"))?;
     let sp = subpath_at(s, id, si)?;
     let n = sp.anchors.len();
     let base = run[0];
@@ -946,11 +965,12 @@ fn cut_at_anchors(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 impl Session {
-    /// The Path Length panel's "sub-path" reading: with a direct-selected contiguous run of
-    /// anchors within one subpath ([`segment_run`]), the run's own partial length — what
-    /// `path.setSegmentLength` would change. `None` when the selection isn't that shape, which is
-    /// the panel's cue to fall back to [`Session::selection_length`] (the whole-selection mode)
-    /// instead.
+    /// The Path Length panel's "sub-path" reading: with a direct-selected, contiguous run of
+    /// interior anchors within one subpath, each with a free, unselected anchor on either side of
+    /// the run ([`segment_run`]), the length of the whole span from one flanking anchor to the
+    /// other — what `path.setSegmentLength` would change. `None` when the selection isn't that
+    /// shape, which is the panel's cue to fall back to [`Session::selection_length`] (the
+    /// whole-selection mode) instead.
     pub fn segment_run_length(&self) -> Option<f64> {
         let (id, si, run) = segment_run(self)?;
         let sp = self.doc().ok()?.doc.node(id)?.path_data()?.subpaths.get(si)?;
