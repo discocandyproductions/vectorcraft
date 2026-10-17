@@ -103,6 +103,14 @@ opt-level = 2
 [profile.dev]
 opt-level = 1
 
+# Testbinaries bevatten de hele dependency-graph (wgpu, egui, vello, ...) statisch
+# gelinkt, en met volledige debuginfo wordt dat op schijf enorm (tientallen GB in
+# target/debug/deps). "line-tables-only" bewaart genoeg info voor een bruikbare
+# backtrace bij een falende test, maar zonder de volledige debugger-info — dit
+# raakt alleen `cargo test`/`cargo bench`, niet `cargo build`/`cargo run`.
+[profile.test]
+debug = "line-tables-only"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1
