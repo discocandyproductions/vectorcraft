@@ -582,12 +582,18 @@ fn recessed_text(ui: &mut Ui, id: egui::Id, shown: &str, width: f32, rows: usize
     {
         ui.memory_mut(|m| m.surrender_focus(id));
     }
-    // When the value changes under a focused field (the slider beside it, a preview, another
-    // field's edit), its text follows: the text typed for the old value would otherwise go back in
-    // on the next Enter, Tab or arrow key (#1457).
+    // Focus alone doesn't freeze the field on an old value: a field that's focused but untouched
+    // (its kept buffer still equals what was last shown, i.e. the user hasn't diverged from it
+    // yet) keeps following `shown` as it changes under it — the Path Length panel's live reading
+    // during a sub-path drag, for one, which used to go stale the moment the field had keyboard
+    // focus at all (even just from an earlier click, no typing). Once the buffer has actually
+    // diverged (typed, stepped or scrubbed), that divergence — not focus by itself — is what
+    // protects it from going stale on the next Enter, Tab or arrow key (#1457).
     let shown_id = id.with("shown");
-    let followed = ui.data_mut(|d| d.get_temp::<String>(shown_id)).is_none_or(|before| before == shown);
+    let last_shown = ui.data_mut(|d| d.get_temp::<String>(shown_id));
     ui.data_mut(|d| d.insert_temp(shown_id, shown.to_string()));
+    let kept = ui.data_mut(|d| d.get_temp::<String>(id));
+    let untouched = kept.as_deref().is_none() || kept.as_deref() == last_shown.as_deref();
     // A press elsewhere can end the focus outside this field's own drawing (a field drawn before it
     // takes it, the canvas ends text input), so `editing` is already false on the frame it reports
     // `lost_focus`: the text typed is still taken then, to be committed (#1637). Escape drops it.
@@ -595,7 +601,7 @@ fn recessed_text(ui: &mut Ui, id: egui::Id, shown: &str, width: f32, rows: usize
     let had_focus = ui.data_mut(|d| d.get_temp::<bool>(focus_id)).unwrap_or(false) && !ui.input(|i| i.key_pressed(egui::Key::Escape));
     // After Shift+Enter applied the text, the field shows the value as it is now, all selected.
     let reshown = after_shift_enter(ui, id);
-    let typed = if (editing || had_focus) && followed && !reshown { ui.data_mut(|d| d.get_temp::<String>(id)) } else { None };
+    let typed = if (editing || had_focus) && !untouched && !reshown { kept } else { None };
     let mut buf: String = typed.unwrap_or_else(|| shown.to_string());
     if reshown {
         select_all(ui, id, &buf);
