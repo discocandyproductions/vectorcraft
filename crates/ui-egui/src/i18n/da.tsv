@@ -5064,6 +5064,8 @@ mark-style	Japanese	Japansk
 	Edge Only	Kun kant
 	Overlay Edge	Overlæg kant
 	Path Length	Stilængde
+	Set Length	Angiv længde
+	Selection has no length to scale	Markeringen har ingen længde at skalere
 @msg	the file's layers weren't read ({_1}): it comes in as its page, in one layer	filens lag blev ikke læst ({_1}): den kommer ind som sin side, i ét lag
 @msg	the file's layers weren't read from its editing data ({_1}): they come from its PDF part	filens lag blev ikke læst fra dens redigeringsdata ({_1}): de kommer fra dens PDF-del
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` skal være grayscale, rgb, hsb, cmyk eller websafe
