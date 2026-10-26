@@ -5326,7 +5326,6 @@ theme	Appearance	Utseende
 	Override Action "Export" Commands	Ändra åtgärdens "Exportera"-kommandon lokalt
 	Override Action "Open" Commands	Ändra åtgärdens "Öppna"-kommandon lokalt
 	Override Action "Save" Commands	Ändra åtgärdens "Spara"-kommandon lokalt
-	Path Length	Banlängd
 	Play:	Spela upp:
 	Save and Close	Spara och stäng
 	Stop on Errors	Stoppa vid fel
